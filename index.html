@@ -1,14 +1,80 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#173b65"><link rel="manifest" href="manifest.webmanifest"><title>Mes Contrôles Techniques</title><style>body{font-family:system-ui,sans-serif;background:#f2f5fa;color:#14253a;margin:0}main{max-width:680px;margin:auto;padding:20px}h1{font-size:1.6rem}.card{background:white;border-radius:15px;padding:18px;margin:14px 0;box-shadow:0 2px 8px #1232}label{display:block;margin:10px 0 5px}input,button{font:inherit;padding:11px;border-radius:9px}input{box-sizing:border-box;width:100%;border:1px solid #a9b5c4}button{background:#173b65;color:white;border:0;cursor:pointer;margin-top:10px}.secondary{background:#e5ebf4;color:#173b65;margin-right:8px}.danger{background:#a52727}.muted{color:#536579;font-size:.9rem}.item{border-bottom:1px solid #ddd;padding:12px 0}.item:last-child{border:0}.late{color:#a52727}.soon{color:#a36600}</style></head><body><main><h1>🚗 Mes Contrôles Techniques</h1><p class="muted">Sans compte · données conservées sur cet appareil · rappels affichés dans l'application</p><section class="card"><h2>Ajouter une échéance</h2><form id="form"><label for="name">Nom facultatif</label><input id="name" placeholder="Ex. Véhicule 1" maxlength="80"><label for="date">Date du contrôle technique</label><input id="date" type="date" required><button type="submit" id="save">Enregistrer</button><button type="button" class="secondary" id="cancel" hidden>Annuler la modification</button></form></section><section class="card"><h2>Mes échéances (<span id="count">0</span>)</h2><div id="list"></div></section><section class="card"><h2>Sauvegarde</h2><p class="muted">Les données restent dans ce navigateur. Exportez une copie avant de changer de téléphone ou de supprimer les données du navigateur.</p><button id="export" class="secondary">Exporter en JSON</button><label for="import">Importer une sauvegarde JSON</label><input type="file" id="import" accept="application/json,.json"></section><section class="card"><h2>Notifications</h2><p class="muted">Cette version affiche les alertes J-30, J-15, J-7 et J-0 à l'ouverture de l'application. Elle ne peut pas garantir une notification lorsque l'application est fermée.</p><button id="notify" class="secondary">Autoriser les notifications (si disponibles)</button><p id="status" class="muted"></p></section></main><script>
-const KEY='ct_dates_v1';let records=[];let editing=null;const $=id=>document.getElementById(id);
-try{const raw=JSON.parse(localStorage.getItem(KEY)||'[]');if(Array.isArray(raw))records=raw.filter(x=>x&&typeof x.id==='string'&&typeof x.date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(x.date)).map(x=>({id:x.id,date:x.date,name:String(x.name||'').slice(0,80)}))}catch{}
-function persist(){localStorage.setItem(KEY,JSON.stringify(records));render()}
-function dayDiff(s){const [y,m,d]=s.split('-').map(Number);return Math.round((Date.UTC(y,m-1,d)-Date.UTC(new Date().getFullYear(),new Date().getMonth(),new Date().getDate()))/86400000)}
-function format(s){const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})}
-function render(){const list=$('list');list.replaceChildren();$('count').textContent=records.length;if(!records.length){const p=document.createElement('p');p.textContent='Aucune échéance enregistrée.';list.append(p)}records.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach((r,i)=>{const div=document.createElement('div');div.className='item';const title=document.createElement('strong');title.textContent=r.name||'Véhicule '+(i+1);const info=document.createElement('p');const days=dayDiff(r.date);info.className=days<0?'late':days<=30?'soon':'muted';info.textContent=format(r.date)+' · '+(days<0?'En retard de '+(-days)+' jour(s)':days===0?'Aujourd’hui':'Dans '+days+' jour(s)');const edit=document.createElement('button');edit.className='secondary';edit.textContent='Modifier';edit.onclick=()=>{editing=r.id;$('name').value=r.name;$('date').value=r.date;$('save').textContent='Mettre à jour';$('cancel').hidden=false;scrollTo({top:0,behavior:'smooth'})};const del=document.createElement('button');del.className='danger';del.textContent='Supprimer';del.onclick=()=>{if(confirm('Supprimer cette échéance ?')){records=records.filter(x=>x.id!==r.id);persist()}};div.append(title,info,edit,del);list.append(div)})}
-$('form').onsubmit=e=>{e.preventDefault();const date=$('date').value;if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return;const name=$('name').value.trim();if(editing){const r=records.find(x=>x.id===editing);if(r){r.name=name;r.date=date}}else records.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),name,date});reset();persist()};function reset(){editing=null;$('form').reset();$('save').textContent='Enregistrer';$('cancel').hidden=true}$('cancel').onclick=reset;
-$('export').onclick=()=>{const blob=new Blob([JSON.stringify(records,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='controles-techniques-sauvegarde.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
-$('import').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const raw=JSON.parse(await file.text());if(!Array.isArray(raw)||!raw.every(x=>x&&typeof x.date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(x.date)))throw Error('Format invalide');if(confirm('Remplacer toutes les échéances par la sauvegarde ?')){records=raw.map(x=>({id:crypto.randomUUID?crypto.randomUUID():String(Math.random()),name:String(x.name||'').slice(0,80),date:x.date}));persist()}}catch{alert('Fichier de sauvegarde invalide')}e.target.value=''};
-$('notify').onclick=async()=>{if(!('Notification'in window)){$('status').textContent='Notifications non disponibles dans ce navigateur.';return}try{const result=await Notification.requestPermission();$('status').textContent='Autorisation : '+result}catch{$('status').textContent='Impossible de demander l’autorisation.'}};
-function checkAlerts(){const due=records.filter(r=>[30,15,7,0].includes(dayDiff(r.date)));if(due.length){$('status').textContent='Échéances à surveiller : '+due.map(r=>(r.name||'Véhicule')+' ('+format(r.date)+')').join(', ');if('Notification'in window&&Notification.permission==='granted'&&document.visibilityState==='visible'){due.forEach(r=>{const k='ct_notified_'+r.id+'_'+dayDiff(r.date)+'_'+r.date;if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1');try{new Notification('Contrôle technique : '+(r.name||'Véhicule'),{body:'Échéance le '+format(r.date)})}catch{}})}}}
-render();checkAlerts();document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkAlerts()});if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#173b65"><link rel="manifest" href="manifest.webmanifest"><title>Mes Contrôles Techniques</title><style>body{font-family:system-ui,sans-serif;background:#f2f5fa;color:#14253a;margin:0}main{max-width:680px;margin:auto;padding:20px}h1{font-size:1.6rem}.card{background:white;border-radius:15px;padding:18px;margin:14px 0;box-shadow:0 2px 8px #1232}label{display:block;margin:10px 0 5px}input,button{font:inherit;padding:11px;border-radius:9px}input{box-sizing:border-box;width:100%;border:1px solid #a9b5c4}button{background:#173b65;color:white;border:0;cursor:pointer;margin-top:10px}.secondary{background:#e5ebf4;color:#173b65;margin-right:8px}.danger{background:#a52727}.muted{color:#536579;font-size:.9rem}.item{border-bottom:1px solid #ddd;padding:12px 0}.item:last-child{border:0}.late{color:#a52727}.soon{color:#a36600}</style></head><body><main><h1>🚗 Mes Contrôles Techniques</h1><p class="muted">Sans compte · données conservées sur cet appareil · rappels affichés dans l'application</p><p id="connection" class="muted" role="status">Connexion à Firebase en cours…</p><section class="card"><h2>Ajouter une échéance</h2><form id="form"><label for="name">Nom facultatif</label><input id="name" placeholder="Ex. Véhicule 1" maxlength="80"><label for="date">Date du contrôle technique</label><input id="date" type="date" required><button type="submit" id="save">Enregistrer</button><button type="button" class="secondary" id="cancel" hidden>Annuler la modification</button></form></section><section class="card"><h2>Mes échéances (<span id="count">0</span>)</h2><div id="list"></div></section><section class="card"><h2>Sauvegarde</h2><p class="muted">Les échéances sont synchronisées avec Firebase. Vous pouvez aussi exporter une sauvegarde JSON.</p><button id="export" class="secondary">Exporter en JSON</button><label for="import">Importer une sauvegarde JSON</label><input type="file" id="import" accept="application/json,.json"></section><section class="card"><h2>Notifications</h2><p class="muted">Cette version affiche les alertes J-30, J-15, J-7 et J-0 à l'ouverture de l'application. Elle ne peut pas garantir une notification lorsque l'application est fermée.</p><button id="notify" class="secondary">Autoriser les notifications (si disponibles)</button><p id="status" class="muted"></p></section></main><script type="module">
+import { firebaseConfig } from './firebase-config.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+const $ = id => document.getElementById(id);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const col = collection(db, 'controles_techniques');
+let records = [], editing = null, ready = false;
+$('save').disabled = true;
+$('import').disabled = true;
+function message(s) { $('connection').textContent = s; }
+function dayDiff(s) { const [y,m,d]=s.split('-').map(Number); const now=new Date(); return Math.round((Date.UTC(y,m-1,d)-Date.UTC(now.getFullYear(),now.getMonth(),now.getDate()))/86400000); }
+function format(s) { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}); }
+function validDate(s) { if(!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false; const [y,m,d]=s.split('-').map(Number); const t=new Date(Date.UTC(y,m-1,d)); return t.getUTCFullYear()===y && t.getUTCMonth()===m-1 && t.getUTCDate()===d; }
+function reset() { editing=null; $('form').reset(); $('save').textContent='Enregistrer'; $('cancel').hidden=true; }
+function render() {
+ const list=$('list'); list.replaceChildren(); $('count').textContent=records.length;
+ if(!records.length){ const p=document.createElement('p');p.textContent='Aucune échéance enregistrée.';list.append(p); }
+ records.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach((r,i)=>{
+  const div=document.createElement('div');div.className='item';
+  const title=document.createElement('strong');title.textContent=r.name||'Véhicule '+(i+1);
+  const info=document.createElement('p');const days=dayDiff(r.date);info.className=days<0?'late':days<=30?'soon':'muted';
+  info.textContent=format(r.date)+' · '+(days<0?'En retard de '+(-days)+' jour(s)':days===0?'Aujourd’hui':'Dans '+days+' jour(s)');
+  const edit=document.createElement('button');edit.className='secondary';edit.textContent='Modifier';edit.onclick=()=>{editing=r.id;$('name').value=r.name;$('date').value=r.date;$('save').textContent='Mettre à jour';$('cancel').hidden=false;window.scrollTo({top:0,behavior:'smooth'});};
+  const del=document.createElement('button');del.className='danger';del.textContent='Supprimer';del.onclick=async()=>{if(!confirm('Supprimer cette échéance pour tous les appareils ?'))return;try{await deleteDoc(doc(col,r.id));}catch(e){alert('Suppression impossible : '+e.message);}};
+  div.append(title,info,edit,del);list.append(div);
+ });
+}
+$('cancel').onclick=reset;
+$('form').onsubmit=async e=>{
+ e.preventDefault();if(!ready)return;
+ const date=$('date').value, name=$('name').value.trim();if(!validDate(date))return alert('Date invalide');
+ const id=editing||crypto.randomUUID();$('save').disabled=true;
+ try{await setDoc(doc(col,id),{name,date});reset();}catch(e){alert('Enregistrement impossible : '+e.message);}finally{$('save').disabled=false;}
+};
+$('export').onclick=()=>{
+ const blob=new Blob([JSON.stringify(records,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='controles-techniques-sauvegarde.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+$('import').onchange=async e=>{
+ const file=e.target.files[0];if(!file||!ready)return;
+ try{
+  const raw=JSON.parse(await file.text());if(!Array.isArray(raw)||!raw.every(x=>x&&validDate(x.date)&&(!x.name||typeof x.name==='string')))throw Error('Format invalide');
+  if(!confirm('Remplacer TOUTES les échéances partagées par cette sauvegarde ?'))return;
+  if(raw.length>400)throw Error('Import limité à 400 échéances');
+  // Firestore batch limit is 500 writes; reserve capacity for existing records.
+  if(records.length+raw.length>450)throw Error('Trop de données pour un seul import');
+  const batch=writeBatch(db);records.forEach(r=>batch.delete(doc(col,r.id)));
+  raw.forEach(r=>batch.set(doc(col,crypto.randomUUID()),{name:String(r.name||'').slice(0,80),date:r.date}));
+  await batch.commit();alert('Sauvegarde importée sur tous les appareils.');
+ }catch(err){alert('Import impossible : '+err.message);}finally{e.target.value='';}
+};
+$('notify').onclick=async()=>{
+ if(!('Notification' in window)){$('status').textContent='Notifications non disponibles dans ce navigateur.';return;}
+ try{const result=await Notification.requestPermission();$('status').textContent='Autorisation : '+result;}catch{$('status').textContent='Impossible de demander l’autorisation.';}
+};
+function checkAlerts(){
+ const due=records.filter(r=>[30,15,7,0].includes(dayDiff(r.date)));
+ if(!due.length)return;
+ $('status').textContent='Échéances à surveiller : '+due.map(r=>(r.name||'Véhicule')+' ('+format(r.date)+')').join(', ');
+ if('Notification' in window&&Notification.permission==='granted'&&document.visibilityState==='visible'){
+  due.forEach(r=>{const k='ct_notified_'+r.id+'_'+dayDiff(r.date)+'_'+r.date;if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1');try{new Notification('Contrôle technique : '+(r.name||'Véhicule'),{body:'Échéance le '+format(r.date)});}catch{}});
+ }
+}
+let unsubscribe=null;
+onAuthStateChanged(auth,user=>{
+ if(!user){ready=false;$('save').disabled=true;$('import').disabled=true;if(unsubscribe){unsubscribe();unsubscribe=null;}return;}
+ if(unsubscribe)return;
+ unsubscribe=onSnapshot(col,snapshot=>{
+  records=snapshot.docs.map(d=>({id:d.id,...d.data()})).filter(x=>typeof x.name==='string'&&validDate(x.date));
+  ready=true;$('save').disabled=false;$('import').disabled=false;
+  message('Connecté à Firebase · synchronisation active');render();checkAlerts();
+ },err=>{ready=false;$('save').disabled=true;$('import').disabled=true;message('Erreur Firebase : '+err.message);});
+});
+signInAnonymously(auth).catch(err=>message('Connexion Firebase impossible : '+err.message));
+render();document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkAlerts();});
+if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script></body></html>
