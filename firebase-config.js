@@ -1,6 +1,6 @@
 // Remplace les valeurs par celles de Firebase > Parametres du projet > Vos applications > Configuration.
 export const firebaseConfig = {
-  apiKey: "AIzaSyAFlnin3lIQQ098GUnsmI0eKvtCZDKzcKQ",
+  apiKey: "AIzaSyCvLR7qYj4jFyrY7qpxW3FPzA-LOipYcdY",
   authDomain: "mes-controles-techniques.firebaseapp.com",
   projectId: "mes-controles-techniques",
   storageBucket: "mes-controles-techniques.firebasestorage.app",
