@@ -57,7 +57,12 @@ $('notify').onclick=async()=>{
  try{const result=await Notification.requestPermission();$('status').textContent='Autorisation : '+result;}catch{$('status').textContent='Impossible de demander l’autorisation.';}
 };
 function checkAlerts(){
- const due=records.filter(r=>[30,15,7,0].includes(dayDiff(r.date)));
+ const due = records.filter(r => {
+  const days = dayDiff(r.date);
+  return r.rdvPris
+    ? [7,0].includes(days)
+    : [60,45,30,15,7,0].includes(days);
+});
  if(!due.length)return;
  $('status').textContent='Échéances à surveiller : '+due.map(r=>(r.name||'Véhicule')+' ('+format(r.date)+')').join(', ');
  if('Notification' in window&&Notification.permission==='granted'&&document.visibilityState==='visible'){
