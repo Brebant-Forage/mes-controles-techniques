@@ -137,6 +137,14 @@ function checkAlerts(){
 let unsubscribe=null;
 onAuthStateChanged(auth,user=>{
  if(!user){ready=false;$('save').disabled=true;$('import').disabled=true;if(unsubscribe){unsubscribe();unsubscribe=null;}return;}
+ let appareil = document.getElementById('appareil-id');
+if (!appareil) {
+  appareil = document.createElement('p');
+  appareil.id = 'appareil-id';
+  appareil.style.cssText = 'text-align:center;font-size:13px;color:#666;overflow-wrap:anywhere;padding:15px;';
+  document.body.appendChild(appareil);
+}
+appareil.textContent = 'Identifiant de cet appareil : ' + user.uid;
  if(unsubscribe)return;
  unsubscribe=onSnapshot(col,snapshot=>{
   records=snapshot.docs.map(d=>({id:d.id,...d.data()})).filter(x=>typeof x.name==='string'&&validDate(x.date));
