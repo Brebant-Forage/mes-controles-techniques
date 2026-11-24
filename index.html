@@ -60,7 +60,7 @@ $('form').onsubmit=async e=>{
  e.preventDefault();if(!ready)return;
  const date=$('date').value, name=$('name').value.trim();if(!validDate(date))return alert('Date invalide');
  const id=editing||crypto.randomUUID();$('save').disabled=true;
- try{await setDoc(doc(col,id),{name,date});reset();}catch(e){alert('Enregistrement impossible : '+e.message);}finally{$('save').disabled=false;}
+try{await setDoc(doc(col,id),{name,date},{merge:true});reset();}catch(e){alert('Enregistrement impossible : '+e.message);}finally{$('save').disabled=false;}
 };
 $('export').onclick=()=>{
  const blob=new Blob([JSON.stringify(records,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='controles-techniques-sauvegarde.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
