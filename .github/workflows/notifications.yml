@@ -30,13 +30,7 @@ jobs:
       - name: Installation de Firebase
         run: npm install --no-save firebase-admin
 
-      - name: Verification de la connexion
-        run: |
-          node -e "
-          const { initializeApp } = require('firebase-admin/app');
-          const { getFirestore } = require('firebase-admin/firestore');
-          initializeApp({projectId: 'mes-controles-techniques'});
-          getFirestore().collection('controles_techniques').limit(1).get()
-            .then(() => console.log('Connexion Firebase OK'))
-            .catch(e => { console.error(e.message); process.exit(1); });
-          "
+      - name: Test des notifications
+        env:
+          TEST_NOTIFICATION: 'true'
+        run: node notifications.cjs
