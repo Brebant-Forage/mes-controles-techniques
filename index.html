@@ -76,5 +76,17 @@ onAuthStateChanged(auth,user=>{
 });
 signInAnonymously(auth).catch(err=>message('Connexion Firebase impossible : '+err.message));
 render();document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkAlerts();});
-if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js', {
+    updateViaCache: 'none'
+  }).then(registration => {
+    registration.update().catch(() => {});
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        registration.update().catch(() => {});
+      }
+    });
+  }).catch(console.error);
+}
 </script></body></html>
