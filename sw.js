@@ -2,7 +2,7 @@ importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js
 importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js');
 
 firebase.initializeApp({
-  apiKey: "AIzaSyCvLR7qYj4jFyrY7qpxW3FPzA-LOipYcdY",
+  apiKey: "AIzaSyAFlnin3lIQQO98GUnsmI0eKvtCZDKzcKQ",
   authDomain: "mes-controles-techniques.firebaseapp.com",
   projectId: "mes-controles-techniques",
   storageBucket: "mes-controles-techniques.firebasestorage.app",
