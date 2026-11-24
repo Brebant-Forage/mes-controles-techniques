@@ -1,0 +1,16 @@
+name: Test planification automatique
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '3-58/5 * * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test automatique
+        run: echo "Planification GitHub OK"
