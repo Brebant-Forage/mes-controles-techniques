@@ -33,9 +33,10 @@ jobs:
       - name: Verification de la connexion
         run: |
           node -e "
-          const admin = require('firebase-admin');
-          admin.initializeApp({projectId: 'mes-controles-techniques'});
-          admin.firestore().collection('controles_techniques').limit(1).get()
+          const { initializeApp } = require('firebase-admin/app');
+          const { getFirestore } = require('firebase-admin/firestore');
+          initializeApp({projectId: 'mes-controles-techniques'});
+          getFirestore().collection('controles_techniques').limit(1).get()
             .then(() => console.log('Connexion Firebase OK'))
-            .catch(e => { console.error(e.code); process.exit(1); });
+            .catch(e => { console.error(e.message); process.exit(1); });
           "
