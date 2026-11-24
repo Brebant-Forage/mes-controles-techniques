@@ -1,0 +1,41 @@
+name: Notifications controles techniques
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  notifications:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Recuperation du depot
+        uses: actions/checkout@v4
+
+      - name: Connexion securisee Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: mes-controles-techniques
+          workload_identity_provider: projects/276327665680/locations/global/workloadIdentityPools/github-actions/providers/github
+          service_account: notifications-automatiques@mes-controles-techniques.iam.gserviceaccount.com
+
+      - name: Installation de Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Installation de Firebase
+        run: npm install --no-save firebase-admin
+
+      - name: Verification de la connexion
+        run: |
+          node -e "
+          const admin = require('firebase-admin');
+          admin.initializeApp({projectId: 'mes-controles-techniques'});
+          admin.firestore().collection('controles_techniques').limit(1).get()
+            .then(() => console.log('Connexion Firebase OK'))
+            .catch(e => { console.error(e.code); process.exit(1); });
+          "
