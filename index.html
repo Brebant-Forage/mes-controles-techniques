@@ -74,7 +74,7 @@ $('import').onchange=async e=>{
   // Firestore batch limit is 500 writes; reserve capacity for existing records.
   if(records.length+raw.length>450)throw Error('Trop de données pour un seul import');
   const batch=writeBatch(db);records.forEach(r=>batch.delete(doc(col,r.id)));
-  raw.forEach(r=>batch.set(doc(col,crypto.randomUUID()),{name:String(r.name||'').slice(0,80),date:r.date}));
+ raw.forEach(r=>batch.set(doc(col,crypto.randomUUID()),{name:String(r.name||'').slice(0,80),date:r.date,rdvPris:r.rdvPris===true}));
   await batch.commit();alert('Sauvegarde importée sur tous les appareils.');
  }catch(err){alert('Import impossible : '+err.message);}finally{e.target.value='';}
 };
