@@ -79,10 +79,47 @@ $('import').onchange=async e=>{
  raw.forEach(r=>batch.set(doc(col,crypto.randomUUID()),{name:String(r.name||'').slice(0,80),date:r.date,rdvPris:r.rdvPris===true}));
   await batch.commit();alert('Sauvegarde importée sur tous les appareils.');
  }catch(err){alert('Import impossible : '+err.message);}finally{e.target.value='';}
-};
-$('notify').onclick=async()=>{
- if(!('Notification' in window)){$('status').textContent='Notifications non disponibles dans ce navigateur.';return;}
- try{const result=await Notification.requestPermission();$('status').textContent='Autorisation : '+result;}catch{$('status').textContent='Impossible de demander l’autorisation.';}
+};$('notify').onclick = async () => {
+  try {
+    if (!(await isSupported())) {
+      alert('Notifications non compatibles.');
+      return;
+    }
+
+    const permission = await Notification.requestPermission();
+
+    if (permission !== 'granted') {
+      alert('Notifications non autorisées.');
+      return;
+    }
+
+    const registration = await navigator.serviceWorker.ready;
+    const messaging = getMessaging(app);
+
+    const token = await getToken(messaging, {
+      vapidKey: VAPID_KEY,
+      serviceWorkerRegistration: registration
+    });
+
+    if (!token || !auth.currentUser) {
+      throw new Error('Inscription indisponible');
+    }
+
+    await setDoc(
+      doc(db, 'notifications', auth.currentUser.uid),
+      {
+        token: token,
+        actif: true
+      },
+      {merge: true}
+    );
+
+    $('status').textContent = 'Notifications activées';
+    alert('Notifications activées sur cet appareil.');
+
+  } catch (err) {
+    alert('Erreur notifications : ' + err.message);
+  }
 };
 function checkAlerts(){
  const due = records.filter(r => {
