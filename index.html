@@ -1,13 +1,15 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#173b65"><link rel="manifest" href="manifest.webmanifest"><title>Mes Contrôles Techniques</title><style>body{font-family:system-ui,sans-serif;background:#f2f5fa;color:#14253a;margin:0}main{max-width:680px;margin:auto;padding:20px}h1{font-size:1.6rem}.card{background:white;border-radius:15px;padding:18px;margin:14px 0;box-shadow:0 2px 8px #1232}label{display:block;margin:10px 0 5px}input,button{font:inherit;padding:11px;border-radius:9px}input{box-sizing:border-box;width:100%;border:1px solid #a9b5c4}button{background:#173b65;color:white;border:0;cursor:pointer;margin-top:10px}.secondary{background:#e5ebf4;color:#173b65;margin-right:8px}.danger{background:#a52727}.muted{color:#536579;font-size:.9rem}.item{border-bottom:1px solid #ddd;padding:12px 0}.item:last-child{border:0}.late{color:#a52727}.soon{color:#a36600}</style></head><body><main><h1>🚗 Mes Contrôles Techniques</h1><p class="muted">Données partagées · sauvegarde automatique sur Firebase · synchronisation en temps réel sur tous vos appareils</p><p id="connection" class="muted" role="status">Connexion à Firebase en cours…</p><section class="card"><h2>Ajouter une échéance</h2><form id="form"><label for="name">Nom facultatif</label><input id="name" placeholder="Ex. Véhicule 1" maxlength="80"><label for="date">Date du contrôle technique</label><input id="date" type="date" required><button type="submit" id="save">Enregistrer</button><button type="button" class="secondary" id="cancel" hidden>Annuler la modification</button></form></section><section class="card"><h2>Mes échéances (<span id="count">0</span>)</h2><div id="list"></div></section><section class="card"><h2>Sauvegarde</h2><p class="muted">Les échéances sont synchronisées avec Firebase. Vous pouvez aussi exporter une sauvegarde JSON.</p><button id="export" class="secondary">Exporter en JSON</button><label for="import">Importer une sauvegarde JSON</label><input type="file" id="import" accept="application/json,.json"></section><section class="card"><h2>Notifications</h2><p class="muted">Cette version affiche les alertes J-30, J-15, J-7 et J-0 à l'ouverture de l'application. Elle ne peut pas garantir une notification lorsque l'application est fermée.</p><button id="notify" class="secondary">Autoriser les notifications (si disponibles)</button><p id="status" class="muted"></p></section></main><script type="module">
 import { firebaseConfig } from './firebase-config.js';
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
-import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, setPersistence, browserLocalPersistence, signOut } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 import { getMessaging, getToken, onMessage, isSupported } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js';
 const VAPID_KEY = 'BPAPaRfERtcmgqt9twO4g4gAfMdKyzvAPBSzuT1v4B-hedbG9qPHG923sIxARcY_ITasOfaDJj5sE2B5sgdFGZQ';
 const $ = id => document.getElementById(id);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const EMAIL_COLLECTIF = 'contact@brebant-forage.fr';
+const UID_COLLECTIF = 'qMwMoKB9x8gn7k3lAmW1OpzklPI3';
 const db = getFirestore(app);
 const col = collection(db, 'controles_techniques');
 let records = [], editing = null, ready = false;
@@ -105,14 +107,23 @@ $('import').onchange=async e=>{
       throw new Error('Inscription indisponible');
     }
 
-    await setDoc(
-      doc(db, 'notifications', auth.currentUser.uid),
-      {
-        token: token,
-        actif: true
-      },
-      {merge: true}
-    );
+  const empreinte = await crypto.subtle.digest(
+  'SHA-256', new TextEncoder().encode(token)
+);
+
+const appareilId = Array.from(new Uint8Array(empreinte))
+  .map(b => b.toString(16).padStart(2, '0'))
+  .join('');
+
+await setDoc(
+  doc(db, 'notifications', appareilId),
+  {
+    token: token,
+    actif: true,
+    uid: auth.currentUser.uid
+  },
+  {merge: true}
+);
 
     $('status').textContent = 'Notifications activées';
     alert('Notifications activées sur cet appareil.');
@@ -134,25 +145,89 @@ function checkAlerts(){
   due.forEach(r=>{const k='ct_notified_'+r.id+'_'+dayDiff(r.date)+'_'+r.date;if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1');try{new Notification('Contrôle technique : '+(r.name||'Véhicule'),{body:'Échéance le '+format(r.date)});}catch{}});
  }
 }
-let unsubscribe=null;
-onAuthStateChanged(auth,user=>{
- if(!user){ready=false;$('save').disabled=true;$('import').disabled=true;if(unsubscribe){unsubscribe();unsubscribe=null;}return;}
- let appareil = document.getElementById('appareil-id');
-if (!appareil) {
-  appareil = document.createElement('p');
-  appareil.id = 'appareil-id';
-  appareil.style.cssText = 'text-align:center;font-size:13px;color:#666;overflow-wrap:anywhere;padding:15px;';
-  document.body.appendChild(appareil);
-}
-appareil.textContent = 'Identifiant de cet appareil : ' + user.uid;
- if(unsubscribe)return;
- unsubscribe=onSnapshot(col,snapshot=>{
-  records=snapshot.docs.map(d=>({id:d.id,...d.data()})).filter(x=>typeof x.name==='string'&&validDate(x.date));
-  ready=true;$('save').disabled=false;$('import').disabled=false;
-  message('Connecté à Firebase · synchronisation active');render();checkAlerts();
- },err=>{ready=false;$('save').disabled=true;$('import').disabled=true;message('Erreur Firebase : '+err.message);});
+const acces = document.createElement('dialog');
+acces.style.cssText = 'width:85%;max-width:380px;border:0;border-radius:16px;padding:24px;box-shadow:0 10px 40px #0004;';
+acces.innerHTML = `
+  <h2>Mes Contrôles Techniques</h2>
+  <p>Accès réservé aux collaborateurs.</p>
+  <form id="form-acces">
+    <label for="code-acces">Code d'accès collectif</label>
+    <input id="code-acces" type="password"
+      autocomplete="current-password" required>
+    <button id="bouton-acces" type="submit">
+      Accéder à l'application
+    </button>
+    <p id="erreur-acces" style="color:red;"></p>
+  </form>
+  <small>Votre connexion sera mémorisée sur cet appareil.</small>
+`;
+document.body.appendChild(acces);
+
+acces.addEventListener('cancel', e => e.preventDefault());
+
+$('form-acces').onsubmit = async e => {
+  e.preventDefault();
+  $('bouton-acces').disabled = true;
+  $('erreur-acces').textContent = '';
+  try {
+    await setPersistence(auth, browserLocalPersistence);
+    await signInWithEmailAndPassword(
+      auth, EMAIL_COLLECTIF, $('code-acces').value
+    );
+    $('code-acces').value = '';
+  } catch (err) {
+    $('erreur-acces').textContent =
+      'Connexion impossible. Vérifiez votre code.';
+  } finally {
+    $('bouton-acces').disabled = false;
+  }
+};
+let unsubscribe = null;
+
+onAuthStateChanged(auth, user => {
+  if (unsubscribe) {
+    unsubscribe();
+    unsubscribe = null;
+  }
+
+  ready = false;
+  $('save').disabled = true;
+  $('import').disabled = true;
+  records = [];
+  render();
+
+  if (!user || user.uid !== UID_COLLECTIF) {
+    message('Connexion requise');
+    if (!acces.open) acces.showModal();
+    if (user) signOut(auth).catch(console.error);
+    return;
+  }
+
+  if (acces.open) acces.close();
+
+  unsubscribe = onSnapshot(col, snapshot => {
+    records = snapshot.docs.map(d => ({
+      id: d.id, ...d.data()
+    })).filter(x =>
+      typeof x.name === 'string' && validDate(x.date)
+    );
+
+    ready = true;
+    $('save').disabled = false;
+    $('import').disabled = false;
+    message('Connecté à Firebase - synchronisation active');
+    render();
+    checkAlerts();
+
+  }, err => {
+    ready = false;
+    $('save').disabled = true;
+    $('import').disabled = true;
+    records = [];
+    render();
+    message('Erreur Firebase : ' + err.message);
+  });
 });
-signInAnonymously(auth).catch(err=>message('Connexion Firebase impossible : '+err.message));
 render();document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkAlerts();});
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js', {
