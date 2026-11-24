@@ -26,7 +26,27 @@ function render() {
   info.textContent=format(r.date)+' · '+(days<0?'En retard de '+(-days)+' jour(s)':days===0?'Aujourd’hui':'Dans '+days+' jour(s)');
   const edit=document.createElement('button');edit.className='secondary';edit.textContent='Modifier';edit.onclick=()=>{editing=r.id;$('name').value=r.name;$('date').value=r.date;$('save').textContent='Mettre à jour';$('cancel').hidden=false;window.scrollTo({top:0,behavior:'smooth'});};
   const del=document.createElement('button');del.className='danger';del.textContent='Supprimer';del.onclick=async()=>{if(!confirm('Supprimer cette échéance pour tous les appareils ?'))return;try{await deleteDoc(doc(col,r.id));}catch(e){alert('Suppression impossible : '+e.message);}};
-  div.append(title,info,edit,del);list.append(div);
+  cb.checked = r.rdvPris === true;
+cb.style.width = 'auto';
+cb.style.marginRight = '8px';
+
+cb.onchange = async () => {
+  cb.disabled = true;
+  try {
+    await setDoc(doc(col,r.id), {
+      rdvPris: cb.checked
+    }, {merge:true});
+  } catch(err) {
+    cb.checked = !cb.checked;
+    alert('Erreur : '+err.message);
+  } finally {
+    cb.disabled = false;
+  }
+};
+
+rdv.append(cb, 'Rendez-vous pris');
+div.append(title,info,rdv,edit,del);
+list.append(div);
  });
 }
 $('cancel').onclick=reset;
