@@ -2,10 +2,16 @@ name: Notifications controles techniques
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '7,22,37,52 * * * *'
 
 permissions:
   contents: read
   id-token: write
+
+concurrency:
+  group: notifications-controles
+  cancel-in-progress: false
 
 jobs:
   notifications:
@@ -30,7 +36,5 @@ jobs:
       - name: Installation de Firebase
         run: npm install --no-save firebase-admin
 
-      - name: Test des notifications
-        env:
-          TEST_NOTIFICATION: 'true'
+      - name: Envoi des notifications automatiques
         run: node notifications.cjs
