@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#173b65"><link rel="manifest" href="manifest.webmanifest"><title>Mes Contrôles Techniques</title><style>body{font-family:system-ui,sans-serif;background:#f2f5fa;color:#14253a;margin:0}main{max-width:680px;margin:auto;padding:20px}h1{font-size:1.6rem}.card{background:white;border-radius:15px;padding:18px;margin:14px 0;box-shadow:0 2px 8px #1232}label{display:block;margin:10px 0 5px}input,button{font:inherit;padding:11px;border-radius:9px}input{box-sizing:border-box;width:100%;border:1px solid #a9b5c4}button{background:#173b65;color:white;border:0;cursor:pointer;margin-top:10px}.secondary{background:#e5ebf4;color:#173b65;margin-right:8px}.danger{background:#a52727}.muted{color:#536579;font-size:.9rem}.item{border-bottom:1px solid #ddd;padding:12px 0}.item:last-child{border:0}.late{color:#a52727}.soon{color:#a36600}input[type="date"]{width:100%;max-width:100%;min-width:0;box-sizing:border-box;display:block;-webkit-appearance:none;appearance:none;}.notify-row{display:flex;align-items:center;justify-content:space-between;gap:16px}.notify-switch{position:relative;width:56px;height:32px;flex:none;border-radius:20px;background:#9ca3af;padding:0;margin:0;transition:background .22s}.notify-switch::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;background:white;border-radius:50%;box-shadow:0 1px 4px #0003;transition:transform .22s}.notify-switch[aria-checked="true"]{background:#34c759}.notify-switch[aria-checked="true"]::after{transform:translateX(24px)}.notify-switch:disabled{opacity:.65;cursor:wait}.notify-switch:focus-visible{outline:3px solid #173b65;outline-offset:3px}</style></head><body><main><h1>🚗 Mes Contrôles Techniques</h1><p class="muted">Données partagées · sauvegarde automatique sur Firebase · synchronisation en temps réel sur tous vos appareils</p><p id="connection" class="muted" role="status">Connexion à Firebase en cours…</p><section class="card"><h2>Ajouter une échéance</h2><form id="form"><label for="name">Nom facultatif</label><input id="name" placeholder="Ex. Véhicule 1" maxlength="80"><label for="date">Date du contrôle technique</label><input id="date" type="date" required><button type="submit" id="save">Enregistrer</button><button type="button" class="secondary" id="cancel" hidden>Annuler la modification</button></form></section><section class="card"><h2>Mes échéances (<span id="count">0</span>)</h2><div id="list"></div></section><section class="card"><h2>Mes rappels (<span id="reminder-count">0</span>)</h2><p class="muted">Contrôles techniques à effectuer dans les 60 prochains jours ou en retard.</p><div id="reminder-list"></div></section><section class="card" style="display:none;"><h2>Sauvegarde</h2><p class="muted">Les échéances sont synchronisées avec Firebase. Vous pouvez aussi exporter une sauvegarde JSON.</p><button id="export" class="secondary">Exporter en JSON</button><label for="import">Importer une sauvegarde JSON</label><input type="file" id="import" accept="application/json,.json"></section><section class="card"><h2>Notifications</h2><p class="muted" style="display:none;">Cette version affiche les alertes J-30, J-15, J-7 et J-0 à l'ouverture de l'application. Elle ne peut pas garantir une notification lorsque l'application est fermée.</p><div class="notify-row"><span id="notify-label">Notifications désactivées</span><button id="notify" type="button" class="notify-switch" role="switch" aria-label="Notifications sur cet appareil" aria-checked="false" disabled></button></div><p id="status" class="muted" role="status"></p><p id="alert-status" class="muted"></p></section></main><script type="module">
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#173b65"><link rel="manifest" href="manifest.webmanifest"><title>Mes Contrôles Techniques</title><style>body{font-family:system-ui,sans-serif;background:#f2f5fa;color:#14253a;margin:0}main{max-width:680px;margin:auto;padding:20px}h1{font-size:1.6rem}.card{background:white;border-radius:15px;padding:18px;margin:14px 0;box-shadow:0 2px 8px #1232}label{display:block;margin:10px 0 5px}input,button{font:inherit;padding:11px;border-radius:9px}input{box-sizing:border-box;width:100%;border:1px solid #a9b5c4}button{background:#173b65;color:white;border:0;cursor:pointer;margin-top:10px}.secondary{background:#e5ebf4;color:#173b65;margin-right:8px}.danger{background:#a52727}.muted{color:#536579;font-size:.9rem}.item{border-bottom:1px solid #ddd;padding:12px 0}.item:last-child{border:0}.late{color:#a52727}.soon{color:#a36600}input[type="date"]{width:100%;max-width:100%;min-width:0;box-sizing:border-box;display:block;-webkit-appearance:none;appearance:none;}.notify-row{display:flex;align-items:center;justify-content:space-between;gap:16px}.notify-switch{position:relative;width:56px;height:32px;flex:none;border-radius:20px;background:#9ca3af;padding:0;margin:0;transition:background .22s}.notify-switch::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;background:white;border-radius:50%;box-shadow:0 1px 4px #0003;transition:transform .22s}.notify-switch[aria-checked="true"]{background:#34c759}.notify-switch[aria-checked="true"]::after{transform:translateX(24px)}.notify-switch:disabled{opacity:.65;cursor:wait}.notify-switch:focus-visible{outline:3px solid #173b65;outline-offset:3px}.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}.cal-grid button{margin:0;padding:8px 0;background:#e5ebf4;color:#173b65;min-width:0}.cal-grid button.event{background:#c9f2d5;color:#14532d;font-weight:bold}.cal-grid button.selected{outline:2px solid #173b65;outline-offset:-2px}.cal-nav{display:flex;align-items:center;justify-content:space-between;gap:8px}.cal-nav button{margin:0}dialog{box-sizing:border-box;width:90%;max-width:400px;border:0;border-radius:15px;padding:20px}input[type=time]{min-width:0}</style></head><body><main><h1>🚗 Mes Contrôles Techniques</h1><p class="muted">Données partagées · sauvegarde automatique sur Firebase · synchronisation en temps réel sur tous vos appareils</p><p id="connection" class="muted" role="status">Connexion à Firebase en cours…</p><section class="card"><h2>Ajouter une échéance</h2><form id="form"><label for="name">Nom facultatif</label><input id="name" placeholder="Ex. Véhicule 1" maxlength="80"><label for="date">Date du contrôle technique</label><input id="date" type="date" required><button type="submit" id="save">Enregistrer</button><button type="button" class="secondary" id="cancel" hidden>Annuler la modification</button></form></section><section class="card"><h2>Mes échéances (<span id="count">0</span>)</h2><div id="list"></div></section><section class="card"><h2>Mes rappels (<span id="reminder-count">0</span>)</h2><p class="muted">Contrôles techniques à effectuer dans les 60 prochains jours ou en retard.</p><div id="reminder-list"></div></section><section class="card"><h2>Calendrier des rendez-vous</h2><div class="cal-nav"><button id="cal-prev" type="button" aria-label="Mois précédent">‹</button><strong id="cal-month"></strong><button id="cal-next" type="button" aria-label="Mois suivant">›</button></div><div id="cal-grid" class="cal-grid" style="margin-top:12px"></div><p class="muted">Vert : rendez-vous confirmé</p><div id="cal-events"></div></section><section class="card" style="display:none;"><h2>Sauvegarde</h2><p class="muted">Les échéances sont synchronisées avec Firebase. Vous pouvez aussi exporter une sauvegarde JSON.</p><button id="export" class="secondary">Exporter en JSON</button><label for="import">Importer une sauvegarde JSON</label><input type="file" id="import" accept="application/json,.json"></section><section class="card"><h2>Notifications</h2><p class="muted" style="display:none;">Cette version affiche les alertes J-30, J-15, J-7 et J-0 à l'ouverture de l'application. Elle ne peut pas garantir une notification lorsque l'application est fermée.</p><div class="notify-row"><span id="notify-label">Notifications désactivées</span><button id="notify" type="button" class="notify-switch" role="switch" aria-label="Notifications sur cet appareil" aria-checked="false" disabled></button></div><p id="status" class="muted" role="status"></p><p id="alert-status" class="muted"></p></section></main><dialog id="rdv-dialog"><form id="rdv-form"><h2>Rendez-vous</h2><p id="rdv-name"></p><label for="rdv-date">Date du rendez-vous</label><input type="date" id="rdv-date" required><label for="rdv-time">Heure du rendez-vous</label><input type="time" id="rdv-time" required><button type="submit">Enregistrer</button><button type="button" class="secondary" id="rdv-cancel">Annuler</button></form></dialog><script type="module">
 import { firebaseConfig } from './firebase-config.js';
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, setPersistence, browserLocalPersistence, signOut } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
@@ -20,7 +20,29 @@ function dayDiff(s) { const [y,m,d]=s.split('-').map(Number); const now=new Date
 function format(s) { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}); }
 function validDate(s) { if(!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false; const [y,m,d]=s.split('-').map(Number); const t=new Date(Date.UTC(y,m-1,d)); return t.getUTCFullYear()===y && t.getUTCMonth()===m-1 && t.getUTCDate()===d; }
 function reset() { editing=null; $('form').reset(); $('save').textContent='Enregistrer'; $('cancel').hidden=true; }
+let calMonth = new Date(); calMonth.setDate(1);
+let calSelected = '';
+const dateKey = (y,m,d) => `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+const validTime = t => typeof t === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(t);
+function renderCalendar(){
+ const y=calMonth.getFullYear(), m=calMonth.getMonth(), grid=$('cal-grid');
+ $('cal-month').textContent=calMonth.toLocaleDateString('fr-FR',{month:'long',year:'numeric'}); grid.replaceChildren();
+ const events=records.filter(r=>r.rdvPris===true && typeof r.rdvDate==='string' && validDate(r.rdvDate) && validTime(r.rdvTime)).sort((a,b)=>(a.rdvDate+a.rdvTime).localeCompare(b.rdvDate+b.rdvTime));
+ for(const day of ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim']){const el=document.createElement('small');el.textContent=day;grid.append(el);}
+ for(let i=0;i<(new Date(y,m,1).getDay()+6)%7;i++)grid.append(document.createElement('span'));
+ for(let d=1;d<=new Date(y,m+1,0).getDate();d++){const key=dateKey(y,m,d), b=document.createElement('button');b.type='button';b.textContent=d;b.classList.toggle('event',events.some(r=>r.rdvDate===key));b.classList.toggle('selected',calSelected===key);b.onclick=()=>{calSelected=calSelected===key?'':key;renderCalendar();};grid.append(b);}
+ const list=$('cal-events');list.replaceChildren();
+ const visible=events.filter(r=>calSelected?r.rdvDate===calSelected:r.rdvDate.startsWith(dateKey(y,m,1).slice(0,7)));
+ for(const r of visible){const p=document.createElement('p');p.className='item';p.textContent=format(r.rdvDate)+' à '+r.rdvTime+' — '+(r.name||'Véhicule');list.append(p);}
+ if(!visible.length)list.textContent='Aucun rendez-vous pour cette période.';
+}
+for(const [id,delta] of [['cal-prev',-1],['cal-next',1]])$(id).onclick=()=>{calMonth.setMonth(calMonth.getMonth()+delta);calSelected='';renderCalendar();};
+function askAppointment(r){
+ const dialog=$('rdv-dialog');$('rdv-name').textContent=r.name||'Véhicule';$('rdv-date').value=r.rdvDate||'';$('rdv-time').value=r.rdvTime||'';
+ return new Promise(resolve=>{let result=null;dialog.onclose=()=>resolve(result);$('rdv-cancel').onclick=()=>dialog.close();$('rdv-form').onsubmit=e=>{e.preventDefault();const rdvDate=$('rdv-date').value,rdvTime=$('rdv-time').value;if(!validDate(rdvDate)||!validTime(rdvTime))return;result={rdvDate,rdvTime};dialog.close();};dialog.showModal();});
+}
 function render() {
+ renderCalendar();
  renderReminders();
  const list=$('list'); list.replaceChildren(); $('count').textContent=records.length;
  if(!records.length){ const p=document.createElement('p');p.textContent='Aucune échéance enregistrée.';list.append(p); }
@@ -41,8 +63,9 @@ cb.checked = r.rdvPris === true;
 cb.style.width = 'auto';
 cb.style.marginRight = '8px';
 
-cb.onchange = async () => {
-  const checked = cb.checked;
+async function updateAppointment(checked, modify=false) {
+  const details=checked?await askAppointment(r):{rdvDate:'',rdvTime:''};
+  if(!details){cb.checked=r.rdvPris===true;return;}
   cb.disabled = true;
   let changed;
   try {
@@ -50,12 +73,14 @@ cb.onchange = async () => {
       const ref = doc(col, r.id);
       const snapshot = await transaction.get(ref);
       if (!snapshot.exists()) throw Error('Échéance introuvable');
-      if ((snapshot.data().rdvPris === true) === checked) return false;
-      transaction.update(ref, {rdvPris: checked});
-      return true;
+      const old=snapshot.data();
+      if (checked && old.rdvPris===true && !modify) return false;
+      if (modify && old.rdvPris!==true) throw Error('Rendez-vous annulé sur un autre appareil');
+      transaction.update(ref, {rdvPris: checked,...details});
+      return checked && old.rdvPris!==true;
     });
   } catch (err) {
-    cb.checked = !checked;
+    cb.checked = r.rdvPris===true;
     alert('Enregistrement impossible : ' + err.message);
     cb.disabled = false;
     return;
@@ -85,7 +110,9 @@ cb.onchange = async () => {
   }
 };
 
+cb.onchange=()=>updateAppointment(cb.checked);
 rdv.append(cb, 'Rendez-vous pris');
+if(r.rdvPris===true){const p=document.createElement('p');p.className='muted';p.textContent=r.rdvDate&&r.rdvTime?format(r.rdvDate)+' à '+r.rdvTime:'Date et heure à renseigner';const b=document.createElement('button');b.type='button';b.className='secondary';b.textContent='Modifier le rendez-vous';b.onclick=()=>updateAppointment(true,true);rdv.append(p,b);}
 div.append(title,info,rdv,edit,del);
 list.append(div);
  });
@@ -109,7 +136,7 @@ $('import').onchange=async e=>{
   // Firestore batch limit is 500 writes; reserve capacity for existing records.
   if(records.length+raw.length>450)throw Error('Trop de données pour un seul import');
   const batch=writeBatch(db);records.forEach(r=>batch.delete(doc(col,r.id)));
- raw.forEach(r=>batch.set(doc(col,crypto.randomUUID()),{name:String(r.name||'').slice(0,80),date:r.date,rdvPris:r.rdvPris===true}));
+ raw.forEach(r=>batch.set(doc(col,crypto.randomUUID()),{name:String(r.name||'').slice(0,80),date:r.date,rdvPris:r.rdvPris===true,rdvDate:r.rdvPris===true&&typeof r.rdvDate==='string'&&validDate(r.rdvDate)&&validTime(r.rdvTime)?r.rdvDate:'',rdvTime:r.rdvPris===true&&typeof r.rdvDate==='string'&&validDate(r.rdvDate)&&validTime(r.rdvTime)?r.rdvTime:''}));
   await batch.commit();alert('Sauvegarde importée sur tous les appareils.');
  }catch(err){alert('Import impossible : '+err.message);}finally{e.target.value='';}
 };let notificationsActive = false;
