@@ -108,16 +108,16 @@ async function main() {
       : [];
 
     if (
-      ancien.exists &&
       rdv &&
-      suivi.rdvPris !== true
+      (!memeDate || suivi.rdvPris !== true)
     ) {
       await envoyer(
         appareils,
         'Rendez-vous pris pour ' + nom,
-        'Controle technique avant le ' + dateFr(date),
+        'Le rendez-vous pour le contrôle technique a été pris. Échéance : ' + dateFr(date),
         'rdv-' + document.id
       );
+      await reference.set({ date, rdvPris: true, rappels }, { merge: true });
     }
 
     const seuils = rdv
