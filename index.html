@@ -109,8 +109,8 @@ async function syncNotifications() {
         showNotificationState(snapshot.exists() && snapshot.data().actif === true && snapshot.data().uid === auth.currentUser.uid);
       }
     } else { showNotificationState(false); }
-    $('notify').disabled = false;
   } catch(err) { $('status').textContent = 'État des notifications indisponible : ' + err.message; }
+  finally { $('notify').disabled = !auth.currentUser || auth.currentUser.uid !== UID_COLLECTIF; }
 }
 $('notify').onclick = async () => {
   $('notify').disabled = true;
@@ -124,8 +124,11 @@ $('notify').onclick = async () => {
       try { await deleteToken(getMessaging(app)); } catch(err) { $('status').textContent = 'Notifications désactivées dans Firebase ; suppression du jeton à réessayer.'; }
       notificationDevice = null;
     } else {
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') throw Error('Autorisez les notifications dans les réglages de votre navigateur.');
+      if (!('Notification' in window)) throw Error('Notifications indisponibles : ouvrez l’application depuis son icône.');
+      let permission = Notification.permission;
+      if (permission !== 'granted') permission = await Notification.requestPermission();
+      if (permission !== 'granted' && Notification.permission !== 'granted') throw Error('Autorisation détectée : ' + permission + ' (navigateur : ' + Notification.permission + ').');
+      if (!(await isSupported())) throw Error('Notifications Firebase non compatibles avec cet appareil.');
       const token = await currentNotificationToken();
       if (!token) throw Error('Inscription indisponible');
       notificationDevice = await notificationRef(token);
