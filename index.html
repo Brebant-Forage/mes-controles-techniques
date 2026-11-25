@@ -1,9 +1,9 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#173b65"><link rel="manifest" href="manifest.webmanifest"><title>Mes Contrôles Techniques</title><style>body{font-family:system-ui,sans-serif;background:#f2f5fa;color:#14253a;margin:0}main{max-width:680px;margin:auto;padding:20px}h1{font-size:1.6rem}.card{background:white;border-radius:15px;padding:18px;margin:14px 0;box-shadow:0 2px 8px #1232}label{display:block;margin:10px 0 5px}input,button{font:inherit;padding:11px;border-radius:9px}input{box-sizing:border-box;width:100%;border:1px solid #a9b5c4}button{background:#173b65;color:white;border:0;cursor:pointer;margin-top:10px}.secondary{background:#e5ebf4;color:#173b65;margin-right:8px}.danger{background:#a52727}.muted{color:#536579;font-size:.9rem}.item{border-bottom:1px solid #ddd;padding:12px 0}.item:last-child{border:0}.late{color:#a52727}.soon{color:#a36600}input[type="date"]{width:100%;max-width:100%;min-width:0;box-sizing:border-box;display:block;-webkit-appearance:none;appearance:none;}</style></head><body><main><h1>🚗 Mes Contrôles Techniques</h1><p class="muted">Données partagées · sauvegarde automatique sur Firebase · synchronisation en temps réel sur tous vos appareils</p><p id="connection" class="muted" role="status">Connexion à Firebase en cours…</p><section class="card"><h2>Ajouter une échéance</h2><form id="form"><label for="name">Nom facultatif</label><input id="name" placeholder="Ex. Véhicule 1" maxlength="80"><label for="date">Date du contrôle technique</label><input id="date" type="date" required><button type="submit" id="save">Enregistrer</button><button type="button" class="secondary" id="cancel" hidden>Annuler la modification</button></form></section><section class="card"><h2>Mes échéances (<span id="count">0</span>)</h2><div id="list"></div></section><section class="card" style="display:none;"><h2>Sauvegarde</h2><p class="muted">Les échéances sont synchronisées avec Firebase. Vous pouvez aussi exporter une sauvegarde JSON.</p><button id="export" class="secondary">Exporter en JSON</button><label for="import">Importer une sauvegarde JSON</label><input type="file" id="import" accept="application/json,.json"></section><section class="card"><h2>Notifications</h2><p class="muted" style="display:none;">Cette version affiche les alertes J-30, J-15, J-7 et J-0 à l'ouverture de l'application. Elle ne peut pas garantir une notification lorsque l'application est fermée.</p><button id="notify" class="secondary">Autoriser les notifications (si disponibles)</button><p id="status" class="muted"></p></section></main><script type="module">
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#173b65"><link rel="manifest" href="manifest.webmanifest"><title>Mes Contrôles Techniques</title><style>body{font-family:system-ui,sans-serif;background:#f2f5fa;color:#14253a;margin:0}main{max-width:680px;margin:auto;padding:20px}h1{font-size:1.6rem}.card{background:white;border-radius:15px;padding:18px;margin:14px 0;box-shadow:0 2px 8px #1232}label{display:block;margin:10px 0 5px}input,button{font:inherit;padding:11px;border-radius:9px}input{box-sizing:border-box;width:100%;border:1px solid #a9b5c4}button{background:#173b65;color:white;border:0;cursor:pointer;margin-top:10px}.secondary{background:#e5ebf4;color:#173b65;margin-right:8px}.danger{background:#a52727}.muted{color:#536579;font-size:.9rem}.item{border-bottom:1px solid #ddd;padding:12px 0}.item:last-child{border:0}.late{color:#a52727}.soon{color:#a36600}input[type="date"]{width:100%;max-width:100%;min-width:0;box-sizing:border-box;display:block;-webkit-appearance:none;appearance:none;}.notify-row{display:flex;align-items:center;justify-content:space-between;gap:16px}.notify-switch{position:relative;width:56px;height:32px;flex:none;border-radius:20px;background:#9ca3af;padding:0;margin:0;transition:background .22s}.notify-switch::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;background:white;border-radius:50%;box-shadow:0 1px 4px #0003;transition:transform .22s}.notify-switch[aria-checked="true"]{background:#34c759}.notify-switch[aria-checked="true"]::after{transform:translateX(24px)}.notify-switch:disabled{opacity:.65;cursor:wait}.notify-switch:focus-visible{outline:3px solid #173b65;outline-offset:3px}</style></head><body><main><h1>🚗 Mes Contrôles Techniques</h1><p class="muted">Données partagées · sauvegarde automatique sur Firebase · synchronisation en temps réel sur tous vos appareils</p><p id="connection" class="muted" role="status">Connexion à Firebase en cours…</p><section class="card"><h2>Ajouter une échéance</h2><form id="form"><label for="name">Nom facultatif</label><input id="name" placeholder="Ex. Véhicule 1" maxlength="80"><label for="date">Date du contrôle technique</label><input id="date" type="date" required><button type="submit" id="save">Enregistrer</button><button type="button" class="secondary" id="cancel" hidden>Annuler la modification</button></form></section><section class="card"><h2>Mes échéances (<span id="count">0</span>)</h2><div id="list"></div></section><section class="card" style="display:none;"><h2>Sauvegarde</h2><p class="muted">Les échéances sont synchronisées avec Firebase. Vous pouvez aussi exporter une sauvegarde JSON.</p><button id="export" class="secondary">Exporter en JSON</button><label for="import">Importer une sauvegarde JSON</label><input type="file" id="import" accept="application/json,.json"></section><section class="card"><h2>Notifications</h2><p class="muted" style="display:none;">Cette version affiche les alertes J-30, J-15, J-7 et J-0 à l'ouverture de l'application. Elle ne peut pas garantir une notification lorsque l'application est fermée.</p><div class="notify-row"><span id="notify-label">Notifications désactivées</span><button id="notify" type="button" class="notify-switch" role="switch" aria-label="Notifications sur cet appareil" aria-checked="false" disabled></button></div><p id="status" class="muted" role="status"></p><p id="alert-status" class="muted"></p></section></main><script type="module">
 import { firebaseConfig } from './firebase-config.js';
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, setPersistence, browserLocalPersistence, signOut } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
-import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
-import { getMessaging, getToken, onMessage, isSupported } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js';
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch, getDoc } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import { getMessaging, getToken, deleteToken, onMessage, isSupported } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js';
 const VAPID_KEY = 'BPAPaRfERtcmgqt9twO4g4gAfMdKyzvAPBSzuT1v4B-hedbG9qPHG923sIxARcY_ITasOfaDJj5sE2B5sgdFGZQ';
 const $ = id => document.getElementById(id);
 const app = initializeApp(firebaseConfig);
@@ -81,56 +81,60 @@ $('import').onchange=async e=>{
  raw.forEach(r=>batch.set(doc(col,crypto.randomUUID()),{name:String(r.name||'').slice(0,80),date:r.date,rdvPris:r.rdvPris===true}));
   await batch.commit();alert('Sauvegarde importée sur tous les appareils.');
  }catch(err){alert('Import impossible : '+err.message);}finally{e.target.value='';}
-};$('notify').onclick = async () => {
+};let notificationsActive = false;
+let notificationDevice = null;
+function showNotificationState(active) {
+  notificationsActive = active;
+  $('notify').setAttribute('aria-checked', String(active));
+  $('notify-label').textContent = active ? 'Notifications activées' : 'Notifications désactivées';
+}
+async function notificationRef(token) {
+  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
+  return doc(db, 'notifications', Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join(''));
+}
+async function currentNotificationToken() {
+  const registration = await navigator.serviceWorker.ready;
+  return getToken(getMessaging(app), {vapidKey: VAPID_KEY, serviceWorkerRegistration: registration});
+}
+async function syncNotifications() {
+  $('notify').disabled = true;
   try {
-    if (!(await isSupported())) {
-      alert('Notifications non compatibles.');
-      return;
+    if (!(await isSupported())) { $('status').textContent = 'Notifications non compatibles.'; return; }
+    if (!auth.currentUser || auth.currentUser.uid !== UID_COLLECTIF) return;
+    if (Notification.permission === 'granted') {
+      const token = await currentNotificationToken();
+      if (token) {
+        notificationDevice = await notificationRef(token);
+        const snapshot = await getDoc(notificationDevice);
+        showNotificationState(snapshot.exists() && snapshot.data().actif === true && snapshot.data().uid === auth.currentUser.uid);
+      }
+    } else { showNotificationState(false); }
+    $('notify').disabled = false;
+  } catch(err) { $('status').textContent = 'État des notifications indisponible : ' + err.message; }
+}
+$('notify').onclick = async () => {
+  $('notify').disabled = true;
+  $('status').textContent = '';
+  try {
+    if (!auth.currentUser || auth.currentUser.uid !== UID_COLLECTIF) throw Error('Connexion requise');
+    if (notificationsActive) {
+      if (!notificationDevice) throw Error('Appareil non identifié');
+      await setDoc(notificationDevice, {actif:false}, {merge:true});
+      showNotificationState(false);
+      try { await deleteToken(getMessaging(app)); } catch(err) { $('status').textContent = 'Notifications désactivées dans Firebase ; suppression du jeton à réessayer.'; }
+      notificationDevice = null;
+    } else {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') throw Error('Autorisez les notifications dans les réglages de votre navigateur.');
+      const token = await currentNotificationToken();
+      if (!token) throw Error('Inscription indisponible');
+      notificationDevice = await notificationRef(token);
+      await setDoc(notificationDevice, {token, actif:true, uid:auth.currentUser.uid}, {merge:true});
+      showNotificationState(true);
+      checkAlerts();
     }
-
-    const permission = await Notification.requestPermission();
-
-    if (permission !== 'granted') {
-      alert('Notifications non autorisées.');
-      return;
-    }
-
-    const registration = await navigator.serviceWorker.ready;
-    const messaging = getMessaging(app);
-
-    const token = await getToken(messaging, {
-      vapidKey: VAPID_KEY,
-      serviceWorkerRegistration: registration
-    });
-
-    if (!token || !auth.currentUser) {
-      throw new Error('Inscription indisponible');
-    }
-
-  const empreinte = await crypto.subtle.digest(
-  'SHA-256', new TextEncoder().encode(token)
-);
-
-const appareilId = Array.from(new Uint8Array(empreinte))
-  .map(b => b.toString(16).padStart(2, '0'))
-  .join('');
-
-await setDoc(
-  doc(db, 'notifications', appareilId),
-  {
-    token: token,
-    actif: true,
-    uid: auth.currentUser.uid
-  },
-  {merge: true}
-);
-
-    $('status').textContent = 'Notifications activées';
-    alert('Notifications activées sur cet appareil.');
-
-  } catch (err) {
-    alert('Erreur notifications : ' + err.message);
-  }
+  } catch(err) { $('status').textContent = 'Erreur notifications : ' + err.message; }
+  finally { $('notify').disabled = false; }
 };
 function checkAlerts(){
  const due = records.filter(r => {
@@ -140,8 +144,8 @@ function checkAlerts(){
     : [60,45,30,15,7,0].includes(days);
 });
  if(!due.length)return;
- $('status').textContent='Échéances à surveiller : '+due.map(r=>(r.name||'Véhicule')+' ('+format(r.date)+')').join(', ');
- if('Notification' in window&&Notification.permission==='granted'&&document.visibilityState==='visible'){
+ $('alert-status').textContent='Échéances à surveiller : '+due.map(r=>(r.name||'Véhicule')+' ('+format(r.date)+')').join(', ');
+ if(notificationsActive&&'Notification' in window&&Notification.permission==='granted'&&document.visibilityState==='visible'){
   due.forEach(r=>{const k='ct_notified_'+r.id+'_'+dayDiff(r.date)+'_'+r.date;if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1');try{new Notification('Contrôle technique : '+(r.name||'Véhicule'),{body:'Échéance le '+format(r.date)});}catch{}});
  }
 }
@@ -197,6 +201,9 @@ onAuthStateChanged(auth, user => {
   render();
 
   if (!user || user.uid !== UID_COLLECTIF) {
+    showNotificationState(false);
+    notificationDevice = null;
+    $('notify').disabled = true;
     message('Connexion requise');
     if (!acces.open) acces.showModal();
     if (user) signOut(auth).catch(console.error);
@@ -204,6 +211,7 @@ onAuthStateChanged(auth, user => {
   }
 
   if (acces.open) acces.close();
+  syncNotifications();
 
   unsubscribe = onSnapshot(col, snapshot => {
     records = snapshot.docs.map(d => ({
